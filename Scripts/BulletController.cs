@@ -11,6 +11,7 @@ public class BulletController : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         
+
         if (collision.collider.CompareTag("MilitaryTarget"))
         {
             if (targetHit) return;
@@ -23,6 +24,13 @@ public class BulletController : MonoBehaviour
 
             GameManager.Instance.addMilitaryTargetHitCount();
         }
+
+        if (collision.collider.CompareTag("Enemy"))
+        {
+            collision.collider.GetComponent<Enemy>().TakeDamage(damage);
+        }
+
+        Destroy(this);
     }
 
 

@@ -4,95 +4,92 @@ using UnityEngine;
 
 public class PathFinding : MonoBehaviour
 {
+    public Transform enemy, player;
+
     Grid grid;
-    public Transform StartPosition;
-    public Transform TargetPosition;
 
     private void Awake()
     {
         grid = GetComponent<Grid>();
     }
 
-    private void Update()
+    public void PathFind()
     {
-        FindPath(StartPosition.position, TargetPosition.position);
-    }
+        Node startNode = grid.NodeFromWorldPosition(enemy.position);
+        Node targetNode = grid.NodeFromWorldPosition(player.position);
 
-    private void FindPath(Vector3 StartPosition, Vector3 TargetPostion)
-    {
-        Node StartNode = grid.NodeFromWorldPosition(StartPosition);
-        Node TargetNode = grid.NodeFromWorldPosition(TargetPostion);
+        List<Node> openSet = new List<Node>();
+        HashSet<Node> closedSet = new HashSet<Node>();
 
-        List<Node> Open = new List<Node>();
-        HashSet<Node> Close = new HashSet<Node>();
+        openSet.Add(startNode);
 
-        Open.Add(StartNode);
-
-        while (Open.Count > 0)
+        while (openSet.Count > 0)
         {
-            Node Current = Open[0];
+            Node currentNode = openSet[0];
 
-            for (int i = 0; i < Open.Count; i++)
+            // get lowest f cost
+            for (int i = 1; i < openSet.Count; i++) 
             {
-                if (Open[i].FCost <= Current.FCost && Open[i].hCost < Current.hCost)
+                if (openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost)
                 {
-                    Current = Open[i];
+                    currentNode = openSet[i];
                 }
+            }
 
-                Open.Remove(Current);
-                Close.Add(Current);
+            openSet.Remove(currentNode);
+            closedSet.Add(currentNode);
 
-                if (Current == TargetNode)
+            if (currentNode == targetNode)
+            {
+                RetracePath(startNode, targetNode);
+                return;
+            }
+
+            foreach (Node neighbor in grid.NeighboreNodes(currentNode))
+            {
+                if (!neighbor.walkable || closedSet.Contains(neighbor)) continue;
+
+                int newMovementCostToNeighbor = currentNode.gCost + GetDistance(currentNode, neighbor);
+
+                if (newMovementCostToNeighbor < neighbor.gCost || !openSet.Contains(neighbor))
                 {
-                    GetFinalPath(StartNode, TargetNode);
-                }
+                    neighbor.gCost = newMovementCostToNeighbor;
+                    neighbor.hCost = GetDistance(neighbor, targetNode);
+                    neighbor.parent = currentNode;
 
-                foreach (Node Neighbor in grid.GetNeighborNodes(Current))
-                {
-                    if (!Neighbor.isUnwalkable || Close.Contains(Neighbor))
+                    if (!openSet.Contains(neighbor))
                     {
-                        continue;
-                    }
-
-                    int MoveCost = Current.gCost + GetManhattenDistance(Current, Neighbor);
-
-                    if (MoveCost < Neighbor.gCost || !Open.Contains(Neighbor))
-                    {
-                        Neighbor.gCost = MoveCost;
-                        Neighbor.hCost = GetManhattenDistance(Neighbor, TargetNode);
-                        Neighbor.Parent = Current;
-
-                        if (!Open.Contains(Neighbor))
-                        {
-                            Open.Add(Neighbor);
-                        }
+                        openSet.Add(neighbor);
                     }
                 }
             }
         }
     }
 
-    private void GetFinalPath(Node start, Node target)
+    void RetracePath(Node startNode, Node targetNode)
     {
-        List<Node> FinalPath = new List<Node>();
-        Node Current = target;
+        List<Node> path = new List<Node>();
+        Node currentNode = targetNode;
 
-        while (Current != start)
+        while (currentNode != startNode)
         {
-            FinalPath.Add(Current);
-            Current = Current.Parent;
+            path.Add(currentNode);
+            currentNode = currentNode.parent;
         }
 
-        FinalPath.Reverse();
+        path.Reverse();
 
-        grid.FinalPath = FinalPath;
+        grid.path = path;
     }
 
-    private int GetManhattenDistance(Node node, Node neighbor)
+    int GetDistance(Node nodeA, Node nodeB)
     {
-        int ix = Mathf.Abs(node.gridX - neighbor.gridX);
-        int iy = Mathf.Abs(node.gridY - neighbor.gridY);
+        int distX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
+        int distY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
 
-        return ix + iy;
+        if (distX > distY)
+            return 14 * distY + 10 * (distX - distY);
+
+        return 14 * distX + 10 * (distY - distX);
     }
 }

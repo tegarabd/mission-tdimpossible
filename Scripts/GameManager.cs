@@ -23,17 +23,20 @@ public class GameManager : MonoBehaviour
     public void addMilitaryTargetHitCount()
     {
         militaryTargetHitCount++;
+        
 
-        if (militaryTargetHitCount == 10)
+        if (militaryTargetHitCount >= 10)
         {
             missionDisplay.color = Color.green;
-            return;
+            militaryTargetHitCount = 10;
+        }
+        else
+        {
+            missionDisplay.color = Color.yellow;
         }
 
-        missionDisplay.color = Color.yellow;
-        missionDisplay.SetText("Hit the training target\n" +
-            militaryTargetHitCount + "/10");
-
+        missionDisplay.SetText("Hit the training target\n(" +
+            militaryTargetHitCount + "/10)");
     }
 
 

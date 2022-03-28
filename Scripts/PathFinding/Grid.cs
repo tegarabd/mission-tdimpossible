@@ -4,17 +4,24 @@ using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
-    public Transform StartPosition;
-    public LayerMask UnWalkableMask;
+    public Transform targetPosition;
+
     public Vector2 gridWorldSize;
     public float nodeRadius;
-    public float Distance;
+    public LayerMask unWalkableMask;
 
     Node[,] grid;
-    public List<Node> FinalPath;
 
     float nodeDiameter;
     int gridSizeX, gridSizeY;
+    public List<Node> path;
+
+    PathFinding pathFinding;
+
+    private void Awake()
+    {
+        pathFinding = GetComponent<PathFinding>();
+    }
 
     private void Start()
     {
@@ -24,94 +31,115 @@ public class Grid : MonoBehaviour
         CreateGrid();
     }
 
+    private void Update()
+    {
+        CreateGrid();
+        pathFinding.PathFind();
+    }
+
     void CreateGrid()
     {
         grid = new Node[gridSizeX, gridSizeY];
-        Vector3 bottomLeft = transform.position - Vector3.right * gridWorldSize.x / 2 - Vector3.forward * gridWorldSize.y / 2;
-        
-        for (int i = 0; i < gridSizeY; i++)
+        Vector3 worldBottomLeft = transform.position 
+            - Vector3.right * gridWorldSize.x / 2 
+            - Vector3.forward * gridWorldSize.y / 2;
+
+        for (int x = 0; x < gridSizeX; x++)
         {
-            for (int j = 0; j < gridSizeX; j++)
+            for (int y = 0; y < gridSizeY; y++)
             {
-                Vector3 worldPoint = bottomLeft
-                    + Vector3.right * (j * nodeDiameter + nodeRadius)
-                    + Vector3.forward * (i * nodeDiameter + nodeRadius);
-                bool UnWalkable = true;
+                Vector3 worldPoint = worldBottomLeft
+                    + Vector3.right * (x * nodeDiameter + nodeRadius)
+                    + Vector3.forward * (y * nodeDiameter + nodeRadius);
 
-                if (Physics.CheckSphere(worldPoint, nodeRadius, UnWalkableMask))
-                {
-                    UnWalkable = false;
-                }
+                bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius, unWalkableMask));
 
-                grid[j, i] = new Node(UnWalkable, worldPoint, i, j);
+                grid[x, y] = new Node(walkable, worldPoint, x, y);
             }
         }
     }
 
     public Node NodeFromWorldPosition(Vector3 worldPosition)
     {
-        float xPoint = ((worldPosition.x + gridWorldSize.x / 2) / gridWorldSize.x);
-        float yPoint = ((worldPosition.z + gridWorldSize.y / 2) / gridWorldSize.y);
+        worldPosition = RelativePosition(transform, worldPosition);
 
-        xPoint = Mathf.Clamp01(xPoint);
-        yPoint = Mathf.Clamp01(yPoint);
+        float percentX = (worldPosition.x + gridWorldSize.x / 2) / gridWorldSize.x;
+        float percentY = (worldPosition.z + gridWorldSize.y / 2) / gridWorldSize.y;
 
-        int x = Mathf.RoundToInt((gridSizeX - 1) * xPoint);
-        int y = Mathf.RoundToInt((gridSizeY - 1) * yPoint);
+        percentX = Mathf.Clamp01(percentX);
+        percentY = Mathf.Clamp01(percentY);
+
+        int x = Mathf.RoundToInt((gridSizeX - 1) * percentX);
+        int y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
 
         return grid[x, y];
     }
 
-    public List<Node> GetNeighborNodes(Node node)
+    public Vector3 WorldPositionFromNode(Node node)
     {
-        List<Node> NeighborNodes = new List<Node>();
+        if (node == NodeFromWorldPosition(targetPosition.position)) return Vector3.zero;
+
+        int x, y;
+
+        if (node.gridX < gridSizeX / 2) x = -1;
+        else x = 1;
+
+        if (node.gridY < gridSizeY / 2) y = -1;
+        else y = 1;
+
+        return new Vector3(x, 1, y);
+    }
+
+    public Vector3 RelativePosition(Transform start, Vector3 target)
+    {
+        Vector3 distance = target - start.position;
+        Vector3 relativePosition = Vector3.zero;
+        relativePosition.x = Vector3.Dot(distance, start.right.normalized);
+        relativePosition.y = Vector3.Dot(distance, start.up.normalized);
+        relativePosition.z = Vector3.Dot(distance, start.forward.normalized);
+
+        return relativePosition;
+    }
+
+    public List<Node> NeighboreNodes(Node node)
+    {
+        List<Node> neighborNodes = new List<Node>();
 
         for (int x = -1; x <= 1; x++)
         {
             for (int y = -1; y <= 1; y++)
             {
-                if (x == 0 && y == 0)
+                if (x == 0 && y == 0) continue;
+
+                int corX = node.gridX + x;
+                int corY = node.gridY + y;
+
+                if (corX >= 0 && corX < gridSizeX && corY >= 0 && corY < gridSizeY)
                 {
-                    continue;
+                    neighborNodes.Add(grid[corX, corY]);
                 }
-
-                int checkX = node.gridX + x;
-                int checkY = node.gridY + y;
-
-                if (checkX >= 0 && checkX < gridSizeX && checkY >= 0 && checkY < gridSizeY)
-                {
-                    NeighborNodes.Add(grid[checkX, checkY]);
-                }
-
             }
         }
 
-        return NeighborNodes;
+        return neighborNodes;
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
-
+        
         if (grid != null)
         {
-            foreach (Node node in grid)
-            {
-                if (node.isUnwalkable)
+            foreach (Node n in grid) {
+                Gizmos.color = (n.walkable) ? Color.white : Color.yellow;
+                if (path != null)
                 {
-                    Gizmos.color = Color.white;
+                    if (path.Contains(n))
+                    {
+                        Gizmos.color = Color.blue;
+                    }
                 }
-                else
-                {
-                    Gizmos.color = Color.yellow;
-                }
-
-                if (FinalPath != null)
-                {
-                    Gizmos.color = Color.red;
-                }
-
-                Gizmos.DrawCube(node.position, Vector3.one * (nodeDiameter - Distance));
+                Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeDiameter - 0.1f));
             }
         }
     }

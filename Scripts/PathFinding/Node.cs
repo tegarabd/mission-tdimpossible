@@ -4,28 +4,29 @@ using UnityEngine;
 
 public class Node
 {
-    public int gridX;
-    public int gridY;
-
-    public bool isUnwalkable;
-    public Vector3 position;
-
-    public Node Parent; // from which node this node found
+    public bool walkable;
+    public Vector3 worldPosition;
 
     public int gCost;
     public int hCost;
 
-    public int FCost { get { return gCost + hCost; } }
+    public int gridX;
+    public int gridY;
 
-    public Node(bool isUnwalkable, Vector3 position, int gridX, int gridY)
+    public Node parent;
+    public Node(bool _walkable, Vector3 _worldPos, int _x, int _y)
     {
-        this.isUnwalkable = isUnwalkable;
-        this.position = position;
-        this.gridX = gridX;
-        this.gridY = gridY;
+        walkable = _walkable;
+        worldPosition = _worldPos;
+        gridX = _x;
+        gridY = _y;
     }
 
-
-
-
+    public int fCost
+    {
+        get
+        {
+            return gCost + hCost;
+        }
+    }
 }
