@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 027a82894d4c43f4593599935d045c08
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - dungeon: {instanceID: 0}
+  - wall: {fileID: 1554050442964812, guid: 2fd2d851cfd96144686cb8591e502761, type: 3}
+  - florr: {fileID: 1544739035787490, guid: d3bbb05c3875910448e5e497c949287b, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
