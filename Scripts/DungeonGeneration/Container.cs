@@ -17,10 +17,10 @@ public class Container : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube(new Vector3(x, 0, y), new Vector3(w, 0.1f, h));
 
-        /*if (neighbor)
+        if (neighbor)
         {
-            Gizmos.color = Color.black;
+            Gizmos.color = Color.green;
             Gizmos.DrawLine(new Vector3(x, 2f, y), new Vector3(neighbor.x, 2f, neighbor.y));
-        }*/
+        }
     }
 }

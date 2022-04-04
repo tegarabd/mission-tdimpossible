@@ -129,8 +129,8 @@ public class Dungeon : MonoBehaviour
 
         room.x = container.x;
         room.y = container.y;
-        room.h = Random.Range(3, container.h);
-        room.w = Random.Range(3, container.w);
+        room.h = container.h - 2;
+        room.w = container.w - 2;
 
         generateRoom.GenerateRoom(room);
     }
