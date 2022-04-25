@@ -14,7 +14,16 @@ public class Asuna : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dialogueText;
     private Transform player;
 
+    [SerializeField] Animator doorLeft;
+    [SerializeField] Animator doorRight;
+
+    [SerializeField] Animator doorLeftTeleport;
+    [SerializeField] Animator doorRightTeleport;
+
+    [SerializeField] List<GameObject> scenes;
+
     private bool isInterracting;
+    private bool firstTime;
 
     private void Awake()
     {
@@ -29,7 +38,7 @@ public class Asuna : MonoBehaviour
         {
             pickUpUI.SetActive(true);
             pickUpUIText.SetText("Press F to Interract");
-
+            player.GetComponent<PlayerPickUp>().PickUpWeapon(null);
 
             if (Input.GetKeyDown(KeyCode.F))
             {
@@ -46,16 +55,43 @@ public class Asuna : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 dialogueUI.SetActive(false);
+                if (GameManager.Instance.current.id == 4)
+                {
+                    OpenGate();
+                }
+                if (GameManager.Instance.current.id == 5)
+                {
+                    OpenGateTeleport();
+                }
+                if (firstTime)
+                {
+                    scenes[GameManager.Instance.current.id].SetActive(true);
+                    firstTime = false;
+                }
                 GameManager.Instance.StartCurrentMission();
                 isInterracting = false;
+                GameManager.Instance.isReceiveInput = true;
             }
         }
+        
+    }
+
+    private void OpenGateTeleport()
+    {
+        doorLeftTeleport.Play("door_left_open");
+        doorRightTeleport.Play("door_right_open");
+    }
+    private void OpenGate()
+    {
+        doorLeft.Play("door_left_open");
+        doorRight.Play("door_right_open");
     }
 
     private void Interract()
     {
         dialogueUI.SetActive(true);
         isInterracting = true;
+        GameManager.Instance.isReceiveInput = false;
 
         if (!GameManager.Instance.current.done && GameManager.Instance.current.id != 1)
         {
@@ -63,10 +99,13 @@ public class Asuna : MonoBehaviour
         } 
         else
         {
+            player.GetComponent<Player>().totalPistolAmmo += 7;
+            player.GetComponent<Player>().totalRifleAmmo += 30;
+
             switch (GameManager.Instance.current.id)
             {
                 case 1:
-                    GameManager.Instance.MissionDone();
+                    if (!GameManager.Instance.current.done) GameManager.Instance.MissionDone();
                     dialogueText.SetText("Take the Pistol!");
                     break;
                 case 2:
@@ -75,9 +114,15 @@ public class Asuna : MonoBehaviour
                 case 3:
                     dialogueText.SetText("Take the Rifle and shoot 50 times");
                     break;
+                case 4:
+                    dialogueText.SetText("Now go Through passage and kill enemies");
+                    break;
+                case 5:
+                    dialogueText.SetText("Head to the teleport room and kill the boss");
+                    break;
             }
+            firstTime = true;
         }
 
-        
     }
 }

@@ -41,31 +41,7 @@ public class BulletController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        
-
-        if (collision.collider.CompareTag("MilitaryTarget"))
-        {
-            if (targetHit) return;
-            else targetHit = true;
-
-            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-            rb.isKinematic = true;
-
-            transform.SetParent(collision.transform);
-
-            MilitaryTargetController.AddHitCount();
-        }
-
-        if (collision.collider.CompareTag("Enemy") && explodeOnTouch)
-        {
-            collision.collider.GetComponent<Enemy>().TakeDamage(damage);
-        }
-
-        if (collision.collider.CompareTag("Player") && explodeOnTouch)
-        {
-            collision.collider.GetComponent<Player>().TakeDamage(damage);
-        }
-
+        Destroy(this.gameObject);
     }
 
 

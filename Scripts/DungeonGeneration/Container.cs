@@ -11,7 +11,7 @@ public class Container : MonoBehaviour
     {
         neighbor = container;
     }
-
+/*
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
@@ -22,5 +22,5 @@ public class Container : MonoBehaviour
             Gizmos.color = Color.green;
             Gizmos.DrawLine(new Vector3(x, 2f, y), new Vector3(neighbor.x, 2f, neighbor.y));
         }
-    }
+    }*/
 }

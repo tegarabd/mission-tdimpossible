@@ -2,9 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Grid : MonoBehaviour
+public class BossGrid : MonoBehaviour
 {
-    public Transform targetPosition;
 
     public Vector2 gridWorldSize;
     public float nodeRadius;
@@ -16,20 +15,20 @@ public class Grid : MonoBehaviour
     public int gridSizeX, gridSizeY;
     public List<Node> path;
 
-    private void Awake()
+    private void Start()
     {
         nodeDiameter = nodeRadius * 2;
         gridSizeX = Mathf.RoundToInt(gridWorldSize.x / nodeDiameter);
         gridSizeY = Mathf.RoundToInt(gridWorldSize.y / nodeDiameter);
+        path = new List<Node>();
         CreateGrid();
     }
-
 
     void CreateGrid()
     {
         grid = new Node[gridSizeX, gridSizeY];
-        Vector3 worldBottomLeft = transform.position 
-            - Vector3.right * gridWorldSize.x / 2 
+        Vector3 worldBottomLeft = transform.position
+            - Vector3.right * gridWorldSize.x / 2
             - Vector3.forward * gridWorldSize.y / 2;
 
         for (int x = 0; x < gridSizeX; x++)
@@ -51,7 +50,7 @@ public class Grid : MonoBehaviour
     {
         worldPosition = RelativePosition(transform, worldPosition);
 
-        
+
 
         float percentX = (worldPosition.x + gridWorldSize.x / 2) / gridWorldSize.x;
         float percentY = (worldPosition.z + gridWorldSize.y / 2) / gridWorldSize.y;
@@ -105,10 +104,11 @@ public class Grid : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
-        
+
         if (grid != null)
         {
-            foreach (Node n in grid) {
+            foreach (Node n in grid)
+            {
                 Gizmos.color = (n.walkable) ? Color.white : Color.yellow;
                 if (path != null)
                 {

@@ -2,66 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PathFinding : MonoBehaviour
+public class BossPathFinding : MonoBehaviour
 {
-    public Transform enemy, player;
-    public float interval;
-    private Node[] patrolNode;
+    public Transform enemy;
     private Node randomNode;
 
-    Grid grid;
+    BossGrid grid;
 
-    private void Start()
+    private void Awake()
     {
-        grid = GetComponent<Grid>();
-        patrolNode = new Node[8];
-        patrolNode[0] = grid.grid[12, 6];
-        patrolNode[1] = grid.grid[16, 8];
-        patrolNode[2] = grid.grid[17, 12];
-        patrolNode[3] = grid.grid[16, 16];
-        patrolNode[4] = grid.grid[12, 18];
-        patrolNode[5] = grid.grid[8, 16];
-        patrolNode[6] = grid.grid[7, 12];
-        patrolNode[7] = grid.grid[8, 8];
-        randomNode = patrolNode[0];
-        PathFind();
+        grid = GetComponent<BossGrid>();
     }
 
-    private void Update()
+    public void SetRandomNode()
     {
-        if (grid.path != null && grid.path.Count <= 0)
-        {
-            StopCoroutine(PathFindRoutine());
-            randomNode = patrolNode[Mathf.RoundToInt(Random.Range(0, 8))];
-            PathFind();
-        }
-        else if (grid.NodeFromWorldPosition(player.position) != null)
-        {
-            StartCoroutine(PathFindRoutine());
-        }
-    }
-
-
-    IEnumerator PathFindRoutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(interval);
-            PathFind();
-        }
+        randomNode = grid.grid[Mathf.RoundToInt(Random.Range(0, grid.gridSizeX)), Mathf.RoundToInt(Random.Range(0, grid.gridSizeY))];
     }
 
     public void PathFind()
     {
-        if (enemy == null) return;
-
         Node startNode = grid.NodeFromWorldPosition(enemy.position);
-        Node targetNode = grid.NodeFromWorldPosition(player.position);
-
-        if (targetNode == null)
-        {
-            targetNode = randomNode;
-        }
+        Node targetNode = randomNode;
 
         List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
@@ -73,7 +34,7 @@ public class PathFinding : MonoBehaviour
             Node currentNode = openSet[0];
 
             // get lowest f cost
-            for (int i = 1; i < openSet.Count; i++) 
+            for (int i = 1; i < openSet.Count; i++)
             {
                 if (openSet[i].fCost < currentNode.fCost || openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost)
                 {
@@ -115,6 +76,7 @@ public class PathFinding : MonoBehaviour
 
     void RetracePath(Node startNode, Node targetNode)
     {
+        grid.path.Clear();
         List<Node> path = new List<Node>();
         Node currentNode = targetNode;
 

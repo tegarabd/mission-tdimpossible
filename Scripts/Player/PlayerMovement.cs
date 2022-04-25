@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float moveSpeed;
     [SerializeField] private float walkSpeed;
@@ -11,64 +11,56 @@ public class EnemyMovement : MonoBehaviour
     private Vector3 moveDirection;
     private Vector3 velocity;
 
-    [SerializeField] private bool isGrounded;
+    private bool isGrounded;
     [SerializeField] private float groundCheckDistance;
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private float gravity;
 
-    [SerializeField] private LayerMask playerLayerMask;
-    [SerializeField] private Transform player;
+    [SerializeField] private float jumpHeight;
 
     private CharacterController controller;
     private Animator animator;
+    private Player player;
 
-    private PathFinding pathFinding;
-    private Grid grid;
-
-    private void Awake()
-    {
-        pathFinding = transform.parent.GetComponentInChildren<PathFinding>();
-        grid = transform.parent.GetComponentInChildren<Grid>();
-    }
     private void Start()
     {
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
+        player = GetComponent<Player>();
     }
     private void Update()
     {
-        Move();
+        if (GameManager.Instance.isReceiveInput)
+            Move();
     }
 
     private void Move()
     {
         isGrounded = Physics.CheckSphere(transform.position, groundCheckDistance, groundMask);
 
-        if (isGrounded && velocity.y < 0)
+        if(isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
         }
 
-        if (grid.path != null && grid.path.Count > 0 && !Physics.CheckSphere(transform.position + (Vector3.up * 1.5f), 5f, playerLayerMask))
+        float moveZ = Input.GetAxis("Vertical");
+        float moveX = Input.GetAxis("Horizontal");
+
+        moveDirection = new Vector3(moveX, 0, moveZ);
+        moveDirection = transform.TransformDirection(moveDirection);
+
+        if (isGrounded)
         {
-            Vector3 dir = grid.path[0].worldPosition - transform.position;
-            float dis = Mathf.Sqrt(dir.x * dir.x + dir.z * dir.z);
-            if (dis <= 2f)
+
+            if (Input.GetKey(KeyCode.Space))
             {
-                grid.path.RemoveAt(0);
+                Jump();
             }
-            moveDirection = new Vector3(Mathf.Clamp(dir.x, -1, 1), 0, Mathf.Clamp(dir.z, -1, 1));
-        } 
-        else
-        {
-            moveDirection = Vector3.zero;
-            transform.LookAt(player);
         }
-      
 
         if (moveDirection != Vector3.zero)
         {
-            Walk();
+            Walk(moveX, moveZ);
         }
         else if (moveDirection == Vector3.zero)
         {
@@ -83,18 +75,22 @@ public class EnemyMovement : MonoBehaviour
     }
     private void Idle()
     {
-        animator.SetFloat("Blend", 0f);
         moveSpeed = 0;
+        animator.SetFloat("xAxis", 0, 0.1f, Time.deltaTime);
+        animator.SetFloat("yAxis", 0, 0.1f, Time.deltaTime);
     }
-    private void Walk()
+    private void Walk(float x, float y)
     {
-        animator.SetFloat("Blend", 1f);
-        moveSpeed = walkSpeed;
+        if (player.onHand) moveSpeed = onWeaponSpeed;
+        else moveSpeed = walkSpeed;
+        animator.SetFloat("xAxis", x * moveSpeed, 0.1f, Time.deltaTime);
+        animator.SetFloat("yAxis", y * moveSpeed, 0.1f, Time.deltaTime);
     }
-
-    public void MoveToDead()
+    private void Jump()
     {
-        velocity.y = -20f;
-        controller.Move(velocity * Time.deltaTime);
+        animator.SetTrigger("Jump");
+        velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity);
+        animator.ResetTrigger("Jump");
     }
+    
 }

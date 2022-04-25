@@ -13,22 +13,64 @@ public class Dungeon : MonoBehaviour
 
     GenerateAllRoom generateRoom;
 
+    public static Vector3 initialPos;
 
     private void Start()
     {
         generateRoom = GetComponent<GenerateAllRoom>();
         mainContainer = gameObject.AddComponent<Container>();
-        mainContainer.x = 0;
-        mainContainer.y = 0;
+        mainContainer.x = 50;
+        mainContainer.y = 50;
         mainContainer.h = mainContainer.w = mapSize;
         containerTree = SplitContainer(mainContainer, iter);
 
-        foreach (Tree leaf in containerTree.GetLeafs())
+        /*foreach (Tree leaf in containerTree.GetLeafs())
         {
             RandomRoom(leaf.container);
-        }
+        }*/
 
         PathToAllRoom(containerTree);
+        PathToExit(containerTree);
+        PathInitialPos(containerTree);
+        GenerateMap();
+    }
+
+    private void PathInitialPos(Tree tree)
+    {
+        Tree curr = tree;
+        while (curr.lchild != null)
+        {
+            curr = curr.lchild;
+        }
+
+        initialPos = new Vector3(transform.position.x + curr.container.x - 50, transform.position.y + 2, transform.position.z + curr.container.y - 50);
+    }
+
+    private void PathToExit(Tree tree)
+    {
+        Tree curr = tree;
+        while (curr.rchild != null)
+        {
+            curr = curr.rchild;
+        }
+
+        generateRoom.GeneratePathToExit(curr.container);
+    }
+
+    private void GenerateMap()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            for (int j = 0; j < 100; j++)
+            {
+                if (!GenerateAllRoom.map[i,j])
+                {
+                    GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    cube.transform.localScale = new Vector3(1, 3, 1);
+                    Instantiate(cube, new Vector3(transform.position.x - 50 + i, transform.position.y + 2, transform.position.z - 50 + j), Quaternion.identity);
+                }
+            }
+        }
     }
 
     public void PathToAllRoom(Tree tree)
@@ -39,6 +81,8 @@ public class Dungeon : MonoBehaviour
         PathToAllRoom(tree.lchild);
         PathToAllRoom(tree.rchild);
     }
+
+    
 
     public Tree SplitContainer(Container container, int iter)
     {

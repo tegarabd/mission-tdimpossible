@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,14 +10,29 @@ public class GameManager : MonoBehaviour
     public List<Mission> missions;
     public Mission current;
     public int totalMissionDone;
+    public Transform player;
+    public Transform cam;
+
+    public GameObject winScreen;
+    public GameObject deadScreen;
+
+    public RawImage winScreenBackground;
+    public RawImage deadScreenBackground;
+
+    public bool isReceiveInput;
 
     // Mission Text
-    [SerializeField] private TextMeshProUGUI missionDisplay;
+    [SerializeField] private TMPro.TextMeshProUGUI missionDisplay;
 
     private void Awake()
     {
         Instance = this;
         missions = new List<Mission>();
+        isReceiveInput = true;
+        deadScreenBackground.CrossFadeAlpha(0f, 0f, true);
+        winScreenBackground.CrossFadeAlpha(0f, 0f, true);
+
+        /*totalMissionDone = 5;*/
 
         missions.Add(new Mission(1, "Find 'Asuna' and Talk to her"));
         missions.Add(new Mission(2, "Pick up the pistol"));
@@ -47,9 +62,22 @@ public class GameManager : MonoBehaviour
     public void ChangeMissionDisplay(int count)
     {
         string text = current.description;
-        text = text.Remove(text.IndexOf("(") + 1, (count > 10) ? 2 : 1);
+        text = text.Remove(text.IndexOf("(") + 1, 1);
         text = text.Insert(text.IndexOf("(") + 1, count.ToString());
         missionDisplay.SetText(text);
     }
 
+    public void PlayerDeadScreen()
+    {
+        deadScreen.SetActive(true);
+        deadScreenBackground.CrossFadeAlpha(1f, 2f, true);
+        Cursor.lockState = CursorLockMode.Confined;
+    }
+
+    public void PlayerWinScreen()
+    {
+        winScreen.SetActive(true);
+        winScreenBackground.CrossFadeAlpha(1f, 2f, true);
+        Cursor.lockState = CursorLockMode.Confined;
+    }
 }

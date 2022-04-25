@@ -7,6 +7,22 @@ public class GenerateAllRoom : MonoBehaviour
     [SerializeField] private GameObject wallPrefabs;
     private GameObject roomParent, pathParent;
     private float offset = 2f;
+
+    public static bool[,] map = new bool[100,100];
+
+    public void GeneratePathToExit(Container container)
+    {
+        int x = Mathf.RoundToInt(container.x);
+        int y = Mathf.RoundToInt(container.y);
+
+        for (int i = x; i < 100; i++)
+        {
+            if (y + 1 <= 99) map[i, y + 1] = true;
+            if (y - 1 >= 0) map[i, y - 1] = true;
+            map[i, y] = true;
+        }
+
+    }
     public void GenerateRoom(Room room)
     {
         roomParent = new GameObject("Room");
@@ -39,26 +55,46 @@ public class GenerateAllRoom : MonoBehaviour
 
     public void GeneratePath(Container c1, Container c2)
     {
-        pathParent = new GameObject("Path");
-        pathParent.transform.SetParent(transform);
-        pathParent.transform.position = Vector3.Lerp(new Vector3(c1.x, 1.5f, c1.y), new Vector3(c2.x, 1.5f, c2.y), 0.5f);
 
-        
+        int x1 = Mathf.RoundToInt(c1.x);
+        int x2 = Mathf.RoundToInt(c2.x);
+        int y1 = Mathf.RoundToInt(c1.y);
+        int y2 = Mathf.RoundToInt(c2.y);
+        int temp;
 
-        if (c1.x == c2.x)
+        if (x2 < x1)
         {
-            GameObject wall = Instantiate(wallPrefabs, new Vector3(pathParent.transform.position.x - offset, pathParent.transform.position.y, pathParent.transform.position.z), Quaternion.identity, pathParent.transform);
-            wall.transform.localScale = new Vector3(2f, 3f, Mathf.Abs(c2.y - c1.y));
-            GameObject wall1 = Instantiate(wallPrefabs, new Vector3(pathParent.transform.position.x + offset, pathParent.transform.position.y, pathParent.transform.position.z), Quaternion.identity, pathParent.transform);
-            wall1.transform.localScale = new Vector3(2f, 3f, Mathf.Abs(c2.y - c1.y));
+            temp = x1;
+            x1 = x2;
+            x2 = temp;
         }
-        else if (c1.y == c2.y)
+
+        if (y2 < y1)
         {
-            GameObject wall = Instantiate(wallPrefabs, new Vector3(pathParent.transform.position.x, pathParent.transform.position.y, pathParent.transform.position.z - offset), Quaternion.Euler(0, 90f, 0), pathParent.transform);
-            wall.transform.localScale = new Vector3(2f, 3f, Mathf.Abs(c2.x - c1.x));
-            GameObject wall1 = Instantiate(wallPrefabs, new Vector3(pathParent.transform.position.x, pathParent.transform.position.y, pathParent.transform.position.z + offset), Quaternion.Euler(0, 90f, 0), pathParent.transform);
-            wall1.transform.localScale = new Vector3(2f, 3f, Mathf.Abs(c2.x - c1.x));
+            temp = y1;
+            y1 = y2;
+            y2 = temp;
         }
-        
+
+        for (int x = x1; x <= x2; x++)
+        {
+            for (int y = y1; y <= y2; y++)
+            {
+                if (x - 1 > 0 && y -1  > 0 && x + 1 < 99 && y + 1< 99)
+                {
+                    map[x, y] = true;
+                }
+                if (x1 == x2 && x - 1 > 0 && x + 1 < 99)
+                {
+                    map[x - 1, y] = true;
+                    map[x + 1, y] = true;
+                }
+                else if (y1 == y2 && y - 1 > 0 && y + 1 < 99)
+                {
+                    map[x, y - 1] = true;
+                    map[x, y + 1] = true;
+                }
+            }
+        }
     }
 }
